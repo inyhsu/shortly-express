@@ -61,7 +61,7 @@ describe('', function() {
     afterEach(function() { server.close(); });
   });
 
-  xdescribe('Database Schema:', function() {
+  describe('Database Schema:', function() {
     it('contains a users table', function(done) {
       var queryString = 'SELECT * FROM users';
       db.query(queryString, function(err, results) {
@@ -123,7 +123,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Account Creation:', function() {
+  describe('Account Creation:', function() {
 
     it('signup creates a new user record', function(done) {
       var options = {
@@ -208,7 +208,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Account Login:', function() {
+  describe('Account Login:', function() {
 
     beforeEach(function(done) {
       var options = {
@@ -277,7 +277,7 @@ describe('', function() {
     });
   });
 
-  xdescribe('Sessions Schema:', function() {
+  describe('Sessions Schema:', function() {
     it('contains a sessions table', function(done) {
       var queryString = 'SELECT * FROM sessions';
       db.query(queryString, function(err, results) {
@@ -507,6 +507,7 @@ describe('', function() {
 
     it('saves a new session when the server receives a request', function(done) {
       requestWithSession('http://127.0.0.1:4568/', function(err, res, body) {
+        // console.log('line 510, response', res.request._jar);
         if (err) { return done(err); }
         var queryString = 'SELECT * FROM sessions';
         db.query(queryString, function(error, sessions) {
@@ -521,7 +522,13 @@ describe('', function() {
     it('sets and stores a cookie on the client', function(done) {
       requestWithSession('http://127.0.0.1:4568/', function(error, res, body) {
         if (error) { return done(error); }
+        console.log(cookieJar);
         var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');
+        // console.log('line 526 response', res.headers.cookies, typeof res.headers.cookies);
+        console.log('line 526 response jar?', res.headers);
+        // console.log('line 526: ', cookies);
+        // console.log('line 526: ', body);
+        console.log('line 527, response', res.request._jar);
         expect(cookies.length).to.equal(1);
         done();
       });
@@ -541,13 +548,15 @@ describe('', function() {
         db.query(queryString, cookieValue, function(error, users) {
           if (error) { return done(error); }
           var user = users[0];
+          console.log('line 551 in Spec, user: ', user);
+          console.log('line 551 in Spec, cookieVal: ', cookieValue);
           expect(user.username).to.equal('Vivian');
           done();
         });
       });
     });
 
-    it('destroys session and cookie when logs out', function(done) {
+    it.only('destroys session and cookie when logs out', function(done) {
       addUser(function(err, res, body) {
         if (err) { return done(err); }
         var cookies = cookieJar.getCookies('http://127.0.0.1:4568/');

@@ -5,6 +5,7 @@ const partials = require('express-partials');
 const bodyParser = require('body-parser');
 const Auth = require('./middleware/auth');
 const models = require('./models');
+const cookieParser = require('./middleware/cookieParser');
 
 const app = express();
 
@@ -14,6 +15,8 @@ app.use(partials());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
+app.use(cookieParser);
+app.use(Auth.createSession);
 
 
 
@@ -37,6 +40,13 @@ app.get('/links',
       res.status(500).send(error);
     });
 });
+
+app.get('/logout', (req, res) => {
+  console.log('in logout req.cookies', req.cookies);
+  models.Sessions.delete({ hash: req.cookies.shortlyid});
+  res.cookie('shortlyid', null);
+  res.send(200);
+})
 
 app.post('/links',
 (req, res, next) => {
@@ -102,8 +112,11 @@ app.post('/signup', (req, res) => {
         password: req.body.password
     })
     .then(results => {
+      console.log('req.cookies', req.cookies);
+      console.log('res.cookies', res.cookies);
+      console.log('users results', results);
+      models.Sessions.update({hash: res.cookies.shortlyid.value}, {userId :results.insertId})
       res.redirect('/');
-      // res.status(200).send(results);
     })
     .error(error => {
       if (error.cause.sqlMessage.includes('Duplicate')) {
@@ -113,20 +126,28 @@ app.post('/signup', (req, res) => {
       }
     })
 });
-
+//WHERE sessions.hash = ? AND users.id = sessions.userId
 app.post('/login', (req, res) => {
   // console.log('login', req.body);
   models.Users.get({username: req.body.username})
     .then(results => {
       if (results) {
-        return models.Users.compare(req.body.password, results.password, results.salt);
+        if (models.Users.compare(req.body.password, results.password, results.salt)) {
+          return results.id;
+        } else {
+          return false;
+        }
       } else {
         return false;
       }
     })
-    .then(boolean => {
-      if (boolean) {
-        Auth.createSession(req, res, () => res.redirect('/'));
+    .then(id => {
+      if (id) {
+        console.log('login session update', req.cookies);
+        models.Sessions.update({hash: req.cookies.shortlyid}, {userId :id})
+        .then(() => {
+          res.redirect('/');
+        });
       } else {
         res.redirect('/login');
       }
