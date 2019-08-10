@@ -17,17 +17,17 @@ app.use(express.static(path.join(__dirname, '../public')));
 
 
 
-app.get('/', 
+app.get('/',
 (req, res) => {
   res.render('index');
 });
 
-app.get('/create', 
+app.get('/create',
 (req, res) => {
   res.render('index');
 });
 
-app.get('/links', 
+app.get('/links',
 (req, res, next) => {
   models.Links.getAll()
     .then(links => {
@@ -38,7 +38,7 @@ app.get('/links',
     });
 });
 
-app.post('/links', 
+app.post('/links',
 (req, res, next) => {
   var url = req.body.url;
   if (!models.Links.isValidUrl(url)) {
@@ -74,10 +74,59 @@ app.post('/links',
     });
 });
 
+
+// SELECT * FROM users WHERE username = ? AND 'password = ? values ( 'Jhon', 'Samantha' )
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
 
+app.post('/signup', (req, res) => {
+  console.log('from req body', req.body);
+  // console.log('users.get on non existant user', models.Users.get({username: req.body.username}));
+
+  // if(models.Users.get({username: req.body.username})) {
+  //   res.redirect('/signup');
+  //   return;
+  // }
+
+  return models.Users.create({
+        username: req.body.username,
+        password: req.body.password
+    })
+    .then(results => {
+      res.redirect('/');
+      // res.status(200).send(results);
+    })
+    .error(error => {
+      if (error.cause.sqlMessage.includes('Duplicate')) {
+        res.redirect('/signup');
+      } else {
+        res.status(500).send(error);
+      }
+    })
+});
+
+app.post('/login', (req, res) => {
+  console.log('login', req.body);
+  models.Users.get({username: req.body.username})
+    .then(results => {
+      if (results) {
+        return models.Users.compare(req.body.password, results.password, results.salt);
+      } else {
+        return false;
+      }
+    })
+    .then(boolean => {
+      if (boolean) {
+        res.redirect('/');
+      } else {
+        res.redirect('/login');
+      }
+    })
+    .error(error => {
+      res.status(500).send(error);
+    });
+})
 
 
 /************************************************************/
