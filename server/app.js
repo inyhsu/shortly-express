@@ -107,7 +107,7 @@ app.post('/signup', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  console.log('login', req.body);
+  // console.log('login', req.body);
   models.Users.get({username: req.body.username})
     .then(results => {
       if (results) {
@@ -118,7 +118,7 @@ app.post('/login', (req, res) => {
     })
     .then(boolean => {
       if (boolean) {
-        res.redirect('/');
+        Auth.createSession(req, res, () => res.redirect('/'));
       } else {
         res.redirect('/login');
       }

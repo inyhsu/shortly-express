@@ -50,11 +50,11 @@ class Sessions extends Model {
    * @returns {Promise<Object>} A promise that is fulfilled with the results of
    * an insert query or rejected with the error that occured.
    */
-  create() {
+  create(userId) {
     let data = utils.createRandom32String();
-    console.log(data);
+    console.log('random 32 string data', data);
     let hash = utils.createHash(data);
-    return super.create.call(this, { hash });
+    return super.create.call(this, { hash, userId });
   }
 }
 
