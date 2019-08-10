@@ -80,6 +80,14 @@ app.post('/links',
 // Write your authentication routes here
 /************************************************************/
 
+app.get('/signup', (req, res) => {
+    res.render('signup');
+});
+
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
 app.post('/signup', (req, res) => {
   console.log('from req body', req.body);
   // console.log('users.get on non existant user', models.Users.get({username: req.body.username}));

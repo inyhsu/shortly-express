@@ -4,8 +4,10 @@ const _ = require('underscore');
 
 module.exports.createSession = (req, res, next) => {
   console.log('create session first line', req.cookies);
-  if (Object.keys(req.cookies).length === 0) {
+  if (!req.cookies || Object.keys(req.cookies).length === 0) {
     // console.log('first line in createSession, request body', req.body);
+    console.log('hiiiii')
+    console.log('create w/ username', req.body);
     models.Users.get({username : req.body.username})
       .then((results) => {
         if (results) {
