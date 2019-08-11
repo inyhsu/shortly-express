@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use(cookieParser);
 app.use(Auth.createSession);
-
+app.use(Auth.verifySession);
 
 
 app.get('/',
@@ -115,7 +115,8 @@ app.post('/signup', (req, res) => {
       console.log('req.cookies', req.cookies);
       console.log('res.cookies', res.cookies);
       console.log('users results', results);
-      models.Sessions.update({hash: res.cookies.shortlyid.value}, {userId :results.insertId})
+      let cookieHash = req.cookies ? req.cookies.shortlyid : res.cookies.shortlyid.value;
+      models.Sessions.update({hash: cookieHash}, {userId :results.insertId})
       res.redirect('/');
     })
     .error(error => {
@@ -144,7 +145,9 @@ app.post('/login', (req, res) => {
     .then(id => {
       if (id) {
         console.log('login session update', req.cookies);
-        models.Sessions.update({hash: req.cookies.shortlyid}, {userId :id})
+        console.log('login session update', res.cookies);
+        let cookieHash = req.cookies ? req.cookies.shortlyid : res.cookies.shortlyid.value;
+        models.Sessions.update({hash: cookieHash}, {userId :id})
         .then(() => {
           res.redirect('/');
         });
